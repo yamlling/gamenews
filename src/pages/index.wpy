@@ -1,0 +1,141 @@
+<template>
+  <div class="container">
+    <van-search value="{{ search }}" placeholder="请输入搜索关键词" class="search" @change="input('search', $event)" use-action-slot="true">
+      <span slot="action" @tap="getData('')">搜索</span>
+    </van-search>
+    <van-grid class="grid-row">
+      <van-grid-item use-slot @tap="getData('游戏资讯')">
+        <span>游戏资讯</span>
+      </van-grid-item>
+      <van-grid-item use-slot @tap="getData('最新动态')">
+        <span>最新动态</span>
+      </van-grid-item>
+      <van-grid-item use-slot @tap="getData('前线速报')">
+        <span>前线速报</span>
+      </van-grid-item>
+      <van-grid-item use-slot @tap="getData('行业发展')">
+        <span>行业发展</span>
+      </van-grid-item>
+    </van-grid>
+
+    <div style="padding:15rpx;width:100%;box-sizing: border-box;padding-bottom:10vh">
+      <div class="row" wx:for="{{list}}" @tap="jump($event)" data-id="{{item.id}}">
+        <image src="{{item.img}}" />
+        <span class="row-title">{{item.title}}</span>
+      </div>
+    </div>
+
+    <van-tabbar active="{{ active }}" bind:change="onChange">
+      <van-tabbar-item icon="wap-home-o">首页</van-tabbar-item>
+      <van-tabbar-item icon="manager-o">我的</van-tabbar-item>
+    </van-tabbar>
+  </div>
+</template>
+
+<script>
+import wepy from '@wepy/core';
+import api from '../common/request.js';
+
+wepy.page({
+  config: {
+    navigationBarTitleText: '首页'
+  },
+
+  hooks: {},
+
+  data: {
+    active: 0,
+    search: '',
+    list: []
+  },
+
+  computed: {},
+
+  methods: {
+    onChange(event) {
+      wx.redirectTo({
+        url: 'my'
+      });
+    },
+
+    input(name, event) {
+      this[name] = event.$wx.detail;
+    },
+
+    getData(type = '') {
+      api
+        ._post('getNewsList', {
+          title: this.search,
+          type: type
+        })
+        .then(res => {
+          this.list = res.data;
+        });
+    },
+
+    jump(event) {
+      let id = event.currentTarget.dataset.id;
+      wx.navigateTo({
+        url: 'news?id=' + id
+      });
+    }
+  },
+
+  created() {
+    this.getData('');
+  }
+});
+</script>
+<config>
+{
+    navigationBarTitleText: '首页',
+    usingComponents: {
+      'van-button': '../components/dist/button/index',
+      "van-tabbar": "../components/dist/tabbar/index",
+      "van-tabbar-item": "../components/dist/tabbar-item/index",
+      "van-search": "../components/dist/search/index",
+      "van-grid": "../components/dist/grid/index",
+      "van-grid-item": "../components/dist/grid-item/index"
+    }
+}
+</config>
+<style lang="less">
+page {
+  box-sizing: border-box;
+}
+.search {
+  width: 100%;
+}
+.row {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  border: 2rpx solid #d0d0d0;
+  border-radius: 16rpx;
+  padding: 20rpx;
+  box-sizing: border-box;
+  margin-bottom: 20rpx;
+  image {
+    height: 300rpx !important;
+    width: 100%;
+    object-fit: cover;
+  }
+  .row-title {
+    margin: 10rpx 0;
+    height: 100rpx;
+    width: 100%;
+  }
+}
+.grid-row {
+  width: 100%;
+  font-size: 28rpx;
+  padding: 0 15rpx;
+  box-sizing: border-box;
+  .van-grid-item__content,
+  .van-grid-item__content--center,
+  .van-hairline--surround {
+    background: #1989fa;
+    color: #fff;
+  }
+}
+</style>

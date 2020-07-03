@@ -1,0 +1,71 @@
+
+
+<template>
+  <div class="container">
+    <div class="row" wx:for="{{list}}" @tap="jump($event)" data-id="{{item.newsId}}">
+      <span style="align-self: flex-end;color:#c3c3c3">{{item.time}}</span>
+      <span style="align-self: flex-start">{{item.content}}</span>
+    </div>
+  </div>
+</template>
+
+<script>
+import wepy from '@wepy/core';
+import api from '../common/request.js';
+
+wepy.page({
+  hooks: {},
+
+  data: {
+    list: []
+  },
+
+  computed: {},
+
+  methods: {
+    getData(id) {
+      api
+        ._post('getCommentList', {
+          id: wx.getStorageSync('id')
+        })
+        .then(res => {
+          this.list = res.data;
+        });
+    },
+
+    jump(event) {
+      let id = event.currentTarget.dataset.id;
+      wx.navigateTo({
+        url: 'news?id=' + id
+      });
+    }
+  },
+
+  created() {
+    this.getData();
+  }
+});
+</script>
+<config>
+{
+    navigationBarTitleText: '评论列表',
+    usingComponents: {
+     'van-button': '../components/dist/button/index',
+     "van-tabbar": "../components/dist/tabbar/index",
+    "van-tabbar-item": "../components/dist/tabbar-item/index",
+     "van-icon": "../components/dist/icon/index"
+    }
+}
+</config>
+<style lang="less">
+.row {
+  font-size: 28rpx;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 20rpx 30rpx;
+  box-sizing: border-box;
+  border: 5rpx solid #eff2f5;
+  margin: 10rpx;
+}
+</style>

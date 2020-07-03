@@ -1,0 +1,212 @@
+<template>
+  <div class="container">
+    <div class="title">{{info.title}}</div>
+    <div class="slider">
+      <van-button block type="danger" @tap="slider" size="small">
+        分享
+      </van-button>
+    </div>
+
+    <div class="content">
+      <rich-text nodes="{{info.content}}" class="ritext"></rich-text>
+    </div>
+
+    <div class="comm">
+      <div class="comm-title">
+        <van-icon name="chat-o" size="20" />
+        <span>评论</span>
+      </div>
+
+      <div class="row" wx:for="{{info.comments}}">
+        <div class="row1">
+          <span>{{item.nick}}</span>
+          <span style="color:#d8d8d8">{{item.time}}</span>
+        </div>
+        <div class="row2">
+          {{item.content}}
+        </div>
+      </div>
+    </div>
+
+    <van-icon name="add-o" class="add" size="30" @tap="{{show=true}}" />
+
+    <van-dialog use-slot title="输入评论" show="{{ show }}" show-cancel-button @close="{{show=false}}" @confirm="submit">
+      <div style="height:100rpx;">
+        <van-field value="{{ content }}" placeholder="请输入评论" type="textarea" @change="input('content',$event)" />
+      </div>
+    </van-dialog>
+  </div>
+</template>
+
+<script>
+import wepy from '@wepy/core';
+import api from '../common/request.js';
+
+wepy.page({
+  hooks: {},
+
+  data: {
+    active: 0,
+    search: '',
+    show: false,
+    content: '',
+    id: '',
+    info: {}
+  },
+
+  computed: {},
+
+  methods: {
+    onChange(event) {
+      wx.redirectTo({
+        url: 'my'
+      });
+    },
+
+    input(name, event) {
+      this[name] = event.$wx.detail;
+    },
+
+    getData(id) {
+      api
+        ._post('getNewsOne', {
+          id: id
+        })
+        .then(res => {
+          res.data.content = res.data.content.replace(
+            '<img ',
+            '<img style="max-width:100%!important;height:auto;display:block;margin:10px 0;"'
+          );
+          this.info = res.data;
+        });
+    },
+
+    jump(event) {
+      let id = event.currentTarget.dataset.id;
+      wx.navigateTo({
+        url: 'news?id=' + id
+      });
+    },
+
+    slider() {
+      wx.showToast({
+        icon: 'none',
+        title: '分享成功!'
+      });
+    },
+
+    submit() {
+      api
+        ._post('addComment', {
+          userId: wx.getStorageSync('id'),
+          newsId: this.id,
+          content: this.content
+        })
+        .then(res => {
+          this.content = '';
+          this.getData(this.id);
+        });
+    },
+
+    history() {
+      api._post('addHistory', {
+        userId: wx.getStorageSync('id'),
+        newsId: this.id
+      });
+    }
+  },
+
+  created() {},
+
+  onLoad(e) {
+    this.id = e.id;
+    this.history();
+    this.getData(this.id);
+  }
+});
+</script>
+<config>
+{
+    navigationBarTitleText: '资讯详情',
+    usingComponents: {
+      'van-button': '../components/dist/button/index',
+      "van-tabbar": "../components/dist/tabbar/index",
+      "van-tabbar-item": "../components/dist/tabbar-item/index",
+      "van-search": "../components/dist/search/index",
+      "van-grid": "../components/dist/grid/index",
+      "van-grid-item": "../components/dist/grid-item/index",
+      "van-icon": "../components/dist/icon/index",
+      "van-dialog": "../components/dist/dialog/index",
+      "van-field": "../components/dist/field/index"
+    }
+}
+</config>
+<style lang="less">
+page {
+  box-sizing: border-box;
+}
+
+.title {
+  font-size: 30rpx;
+  font-weight: 600;
+}
+.content {
+  box-sizing: border-box;
+  padding: 20rpx;
+  width: 100%;
+  image {
+    width: 100% !important;
+    object-fit: cover;
+  }
+  .ritext {
+    width: 100%;
+  }
+}
+.comm {
+  box-sizing: border-box;
+  width: 100%;
+  .comm-title {
+    color: #1989fa;
+    box-sizing: border-box;
+    font-size: 26rpx;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding-left: 20rpx;
+    padding-bottom: 20rpx;
+    margin-bottom: 20rpx;
+    border-bottom: 2rpx solid #f0f3f6;
+  }
+  .row {
+    box-sizing: border-box;
+    font-size: 26rpx;
+    width: 100%;
+    padding: 20rpx;
+    margin-bottom: 20rpx;
+    border-bottom: 2rpx solid #f0f3f6;
+    .row1 {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .row2 {
+      text-align: left;
+      margin: 10rpx 0;
+    }
+  }
+}
+.slider {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+  padding: 10rpx 20rpx;
+  box-sizing: border-box;
+}
+.add {
+  position: fixed;
+  bottom: 10vh;
+  right: 3vw;
+  z-index: 9999;
+  color: #1989fa;
+}
+</style>
